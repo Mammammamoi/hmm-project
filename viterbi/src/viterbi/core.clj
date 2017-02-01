@@ -1,9 +1,18 @@
 (ns viterbi.core)
 
 (defn foo
-  "I don't do a whole lot."
+  "I don't do a whole lot. I just make you smile."
   [x]
-  (println x "Hello, World!"))
+  (println x "Hello, Universe!"))
+
+  (def shortEmission (hash-map "wir" (hash-map "NAM" 0.2) "werden" (hash-map "MV" 0.3
+  "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "S" 1)))
+
+  (def shortBigram (hash-map "ADJ" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.4
+   "S" 0.1) "MV" (hash-map "ADJ" 0.2 "MV" 0.3 "KOPV" 0.1 "NAM" 0.1 "PART" 0.2 "S" 0.1)
+   "KOPV" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.1 "S" 0.1)
+   "NAM" (hash-map "ADJ" 0.05 "MV" 0.4 "KOPV" 0.3 "NAM" 0.05 "PART" 0.1 "S" 0.1)
+     "S" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1)   ))
 
   (def emission (hash-map "er" {"PPRO" 1, "SA" 0.5}, "Andrew" {"NAM" 0.04}, "J." {"NAM" 0.04}, "Viterbi" {"NAM" 0.04}, "Dekodierung" {"NAM" 0.04},
   "Faltungscodes" {"NAM" 0.08}, "Nebenproduk" {"NAM" 0.04}, "Analyse" {"NAM" 0.04}, "Fehlerwahrscheinlichkeit" {"NAM" 0.04},
@@ -30,7 +39,7 @@
     "Maps the values of a hash-map into a new hash-map
      with a function f"
    [f, oldHashMap]
-   (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))
+   (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
   )
 
   (defn merge-filter
@@ -47,35 +56,45 @@
   )
 
  ;keyWords: Liste von Wörtern, priMapVa: hash-map mit wörtern und POS
- ;biMapVal: hash-map mit POS und POS, maximum: das bisherige größte Wort
+ ;biMapVal: hash-map mit POS und POS, maximum: [POS mit der größte W-keit]
  (defn maxVal
-   [keyWords, priMapVa, biMapVal, maximum, propSeq]
-   (if (empty? keyWords)
+   [keyPOS, priVal, biMapVal, maximum, probSeq]
+   (if (empty? keyPOS)
     maximum
-      (let [newMax (into [] (flatten (vector (first keyWords)
-        (apply max-key val
-         (mapVal (fn [a] (* a propSeq))
-            (merge-filter * (get priMapVa (first keyWords)) biMapVal {"DEF" -1}) ) ) )))]
-      ;  (println "maximum nicht gefunden")
-      ; (println newMax)
-      ; (println maximum)
-      (if (> (get newMax 2) (get maximum 2))
-        (maxVal (rest keyWords), priMapVa, biMapVal, newMax, propSeq)
-        (maxVal (rest keyWords), priMapVa, biMapVal, maximum, propSeq))
-      )
+    (let [newProb (vector (first keyPOS)
+    (* (* (get biMapVal (first keyPOS)) priVal) (get probSeq (first keyPOS))))]
+     (if (> (get newProb 1) (get maximum  1))
+       (maxVal (rest keyPOS) priVal biMapVal newProb probSeq)
+       (maxVal (rest keyPOS) priVal biMapVal maximum probSeq)
+     )
     )
    )
 
-  ;wordSquence =  [word POS probability]
+   )
+
+ (defn get-ins
+   [hashMap keys key]
+   (if (empty? keys)
+    {}
+     (let [value (get-in hashMap (vector (first keys) key))]
+       (conj (get-ins hashMap (rest keys) key) [(first keys) value])))
+  )
+
+
+  ; pathProb (hash-map POS1 maxProb POS2 maxProb)
+  ; dicBiVec [hash-map von dic und BiMap]
   (defn viterPos
     "implementation of the viterbi-algorithm"
-   [posMap, biGramMap, wordSeqVec]
-   (if (= (first (last wordSeqVec)) ".")
-    wordSeqVec
-    (let [maxProp (maxVal (keys posMap) posMap
-         (get biGramMap (get (last wordSeqVec) 1) )
-         (vector "" "" 0.0) (get (last wordSeqVec) 2) )]
-    (viterPos posMap, biGramMap, (cons wordSeqVec maxProp))
+   [words, dictionary, biGramMap, newBiMap, pathProb]
+   (if (empty? words)
+     (vector dictionary newBiMap)
+    (let [newPathProb (mapVal (fn [k, v] (get (maxVal (keys pathProb) v
+    (get-ins biGramMap (keys pathProb) k)
+       ["a" 0] pathProb) 1))
+      (get dictionary (first words)))]
+      (println newPathProb)
+    (viterPos (rest words), (update dictionary (first words) (fn [a] newPathProb)), biGramMap, biGramMap
+    newPathProb)
     )
    )
   )

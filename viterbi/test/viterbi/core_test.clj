@@ -7,32 +7,32 @@
     (is (= 1 1))))
 
  (deftest maxValtest
-   (testing "FIXME, I fail."
+   (testing "Tests von Methoden, welche mit der Methode maxVal in vorkommen oder von maxVal selbst"
    (is (= (merge-with * (get {"geschickt" {"Part" 0.4},
    "werden" {"AuxV" 0.3, "KopV" 0.5}} "geschickt")
     {"AuxV" 0.4 "KopV" 0.3 "Part" 0.1})
     {"Part" 0.04000000000000001, "AuxV" 0.4, "KopV" 0.3} ))
-   (is (= (select-keys
-      (merge-with * (get {"geschickt" {"Part" 0.4},
-     "werden" {"AuxV" 0.3, "KopV" 0.5}} "geschickt")
-      {"AuxV" 0.4 "KopV" 0.3 "Part" 0.1}) (keys (get {"geschickt" {"Part" 0.4},
-      "werden" {"AuxV" 0.3, "KopV" 0.5}} "geschickt"))) {"Part" 0.04000000000000001}))
-    (is (= (mapVal (fn [a] (* a 2) {"Part" 0.04000000000000001}) {"Part" (* 0.04000000000000001 2)})))
-    (is (= (apply max-key val {"a" 0 "b" 0.1 "c" 0.5}) ["c" 0.5]))
-    (is (= (flatten (vector "ach" ["c" 0.5])) ["ach" "c" 0.5]))
+    (is (= (mapVal (fn [k, v] (* v (* k 2)) {2 0.04000000000000001}) {2 (* 0.04000000000000001 4)})))
     (is (= (merge-filter * {"a" 1 "b" 2 "d" 3 "e" 4 "f" 5} {"a" 4 "b" 5 "c" 6} {}) {"a" 4 "b" 10}))
-    (is (=   (maxVal (keys (hash-map "wir" (hash-map "Nomn" 0.2)
-       "werden" (hash-map "AuxV" 0.3 "KopV" 0.5)
-       "geschickt" (hash-map "Adje" 0.2 "Part" 0.4)))
-       (hash-map "wir" (hash-map "Nomn" 0.2)
-        "werden" (hash-map "AuxV" 0.3 "KopV" 0.5) "geschickt" (hash-map "Adje" 0.2 "Part" 0.4))
-        {"AuxV" 0.4 "KopV" 0.3 "Part" 0.1}
-       ["a" "b" 0], 2) ["werden" "KopV" 0.3]))
+    (is (=   (maxVal (keys (hash-map "AuxV" 0.0072, "KopV" 0.009))
+        0.2
+        {"AuxV" 0.2 "KopV" 0.2}
+       ["a" 0], (hash-map "AuxV" 0.0072 "KopV" 0.009)) ["KopV" 0.000360]))
     )
    )
 
-  ;(viterPos emission bigram []) = [["wort1" "POS" num1] ["wort2" "POS2" num2]]
-   (deftest viterTest
-     testing "viterbi-algorithm test"
-    (is (= (viterPos emission bigram [])  ))
-    )
+   (deftest viterbitest
+     (testing "Tests zum Viterbi-Algorithmus"
+    (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
+    (is (= (viterPos (keys shortEmission) shortEmission shortBigram shortBigram {"S" 1})
+     (vector (hash-map "wir" (hash-map "NAM" 0.06) "werden" (hash-map "MV" 0.0072
+     "KOPV" 0.009) "geschickt" (hash-map "ADJ" 0.00036 "PART" 0.000576) "." (hash-map "S" 1))
+     shortBigram
+     )))
+     ))
+
+  ;(viterPos emission bigram []) = [["wort1" "POS" num1] ["wort2" "POS2" num]]
+  ; (deftest viterTest
+  ;   testing "viterbi-algorithm test"
+  ;  (is (= (viterPos emission bigram [])  ))
+  ;  )
