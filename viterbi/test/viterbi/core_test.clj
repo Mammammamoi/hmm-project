@@ -24,15 +24,9 @@
    (deftest viterbitest
      (testing "Tests zum Viterbi-Algorithmus"
     (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
-    (is (= (viterPos (keys shortEmission) shortEmission shortBigram shortBigram {"S" 1})
-     (vector (hash-map "wir" (hash-map "NAM" 0.06) "werden" (hash-map "MV" 0.0072
-     "KOPV" 0.009) "geschickt" (hash-map "ADJ" 0.00036 "PART" 0.000576) "." (hash-map "S" 1))
+    (is (= (viterPos '("wir" "werden" "geschickt" ".") shortEmission shortBigram shortBigram {"S" 1})
+     (vector {"wir" {"NAM" 0.06}, "geschickt" {"ADJ" 3.6E-4, "PART" 5.760000000000001E-4},
+     "werden" {"MV" 0.0072, "KOPV" 0.009}, "." {"S" 5.760000000000002E-5}}
      shortBigram
      )))
      ))
-
-  ;(viterPos emission bigram []) = [["wort1" "POS" num1] ["wort2" "POS2" num]]
-  ; (deftest viterTest
-  ;   testing "viterbi-algorithm test"
-  ;  (is (= (viterPos emission bigram [])  ))
-  ;  )

@@ -12,7 +12,8 @@
    "S" 0.1) "MV" (hash-map "ADJ" 0.2 "MV" 0.3 "KOPV" 0.1 "NAM" 0.1 "PART" 0.2 "S" 0.1)
    "KOPV" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.1 "S" 0.1)
    "NAM" (hash-map "ADJ" 0.05 "MV" 0.4 "KOPV" 0.3 "NAM" 0.05 "PART" 0.1 "S" 0.1)
-     "S" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1)   ))
+   "PART" (hash-map "ADJ" 0.3 "MV" 0.1 "KOPV" 0.1 "NAM" 0.1 "PART" 0.3 "S" 0.1)
+     "S" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1 "S" 0)   ))
 
   (def emission (hash-map "er" {"PPRO" 1, "SA" 0.5}, "Andrew" {"NAM" 0.04}, "J." {"NAM" 0.04}, "Viterbi" {"NAM" 0.04}, "Dekodierung" {"NAM" 0.04},
   "Faltungscodes" {"NAM" 0.08}, "Nebenproduk" {"NAM" 0.04}, "Analyse" {"NAM" 0.04}, "Fehlerwahrscheinlichkeit" {"NAM" 0.04},
@@ -92,7 +93,6 @@
     (get-ins biGramMap (keys pathProb) k)
        ["a" 0] pathProb) 1))
       (get dictionary (first words)))]
-      (println newPathProb)
     (viterPos (rest words), (update dictionary (first words) (fn [a] newPathProb)), biGramMap, biGramMap
     newPathProb)
     )
