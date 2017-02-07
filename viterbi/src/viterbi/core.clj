@@ -1,5 +1,6 @@
 (ns viterbi.core)
 (use '[clojure.set :only (union)])
+(use '[clojure.string :only (split)])
 
 (defn foo
   "I don't do a whole lot. I just make you smile."
@@ -83,9 +84,15 @@
           (viterPos (rest words), (update dictionary (first words) (fn [a] newPathForm)),
                     biGramMap, (union backtrackMap biGramSeq), newPathForm)))))
 
-(defn backtracker
+  (defn backtracker
   "returns a sequence of postags"
-  [postags, pos]
- (if (= pos "S")
+   [postags, pos]
+  (if (= pos "S")
    (vector pos)
- (conj (backtracker postags (get postags pos)) pos)))
+  (conj (backtracker postags (get postags pos)) pos)))
+
+  (defn bestSeq
+   "returns the most probable sequence of postags"
+   [satz, dict, postags]
+   (backtracker postags
+     (first (apply max-key val (get dict (re-find #"\w+" (last (split satz #" "))))))))

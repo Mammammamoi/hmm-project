@@ -29,5 +29,9 @@
 
     (deftest backtrackerTest
       (testing "Tests zur Herausgabe der POS-Tags in richtiger Reihenfolge"
-     (is (= (backtracker {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
-          "PART") (vector "S" "NAM" "MV" "PART")))))
+        (is (= (backtracker {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
+          "PART") (vector "S" "NAM" "MV" "PART")))
+        (is (= (bestSeq "wir werden geschickt."
+           shortEmission
+           {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"})
+           (vector "S" "NAM" "MV" "PART")))))
