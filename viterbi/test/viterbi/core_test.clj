@@ -12,7 +12,7 @@
    "werden" {"AuxV" 0.3, "KopV" 0.5}} "geschickt")
     {"AuxV" 0.4 "KopV" 0.3 "Part" 0.1})
     {"Part" 0.04000000000000001, "AuxV" 0.4, "KopV" 0.3} ))
-    (is (= (mapVal (fn [k, v] (* v (* k 2)) {2 0.04000000000000001}) {2 (* 0.04000000000000001 4)})))
+    (is (= (mapVal (fn [k, v] (* v (* k 2)) {2 0.04000000000000001}) {2 (* 0.04000000000000001 4)} 1 )))
     (is (= (merge-filter * {"a" 1 "b" 2 "d" 3 "e" 4 "f" 5} {"a" 4 "b" 5 "c" 6} {}) {"a" 4 "b" 10}))
     (is (=   (maxVal (keys (hash-map "AuxV" 0.0072, "KopV" 0.009))
         0.2
@@ -24,9 +24,16 @@
    (deftest viterbitest
      (testing "Tests zum Viterbi-Algorithmus"
     (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
-    (is (= (viterPos '("wir" "werden" "geschickt" ".") shortEmission shortBigram shortBigram {"S" 1})
+    (is (= (viterPos '("wir" "werden" "geschickt" ".") shortEmission shortBigram {} {"S" 1})
      (vector {"wir" {"NAM" 0.06}, "geschickt" {"ADJ" 3.6E-4, "PART" 5.760000000000001E-4},
      "werden" {"MV" 0.0072, "KOPV" 0.009}, "." {"S" 5.760000000000002E-5}}
-     shortBigram
+     {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
      )))
      ))
+
+    (deftest backtrackerTest
+      (testing "Tests zur Herausgabe der POS-Tags in richtiger Reihenfolge"
+     (is (= (backtracker {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
+          "PART") (vector "S" "NAM" "MV" "PART")))
+
+    ))

@@ -1,4 +1,5 @@
 (ns viterbi.core)
+(use '[clojure.set :only (union)])
 
 (defn foo
   "I don't do a whole lot. I just make you smile."
@@ -39,8 +40,11 @@
   (defn mapVal
     "Maps the values of a hash-map into a new hash-map
      with a function f"
-   [f, oldHashMap]
+   [f, oldHashMap, withKey]
+   (if (= withKey 1)
    (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
+   (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))
+   )
   )
 
   (defn merge-filter
@@ -84,17 +88,28 @@
 
   ; pathProb (hash-map POS1 maxProb POS2 maxProb)
   ; dicBiVec [hash-map von dic und BiMap]
+  ; backtrackMap (hash-map secondPOS firstPOS)
   (defn viterPos
     "implementation of the viterbi-algorithm"
-   [words, dictionary, biGramMap, newBiMap, pathProb]
+   [words, dictionary, biGramMap, backtrackMap, pathProb]
    (if (empty? words)
-     (vector dictionary newBiMap)
-    (let [newPathProb (mapVal (fn [k, v] (get (maxVal (keys pathProb) v
+     (vector dictionary backtrackMap)
+    (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
     (get-ins biGramMap (keys pathProb) k)
-       ["a" 0] pathProb) 1))
-      (get dictionary (first words)))]
-    (viterPos (rest words), (update dictionary (first words) (fn [a] newPathProb)), biGramMap, biGramMap
-    newPathProb)
-    )
-   )
-  )
+       ["a" 0] pathProb))
+      (get dictionary (first words)) 1)]
+      (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
+        [outPos (get maxVect 1)])) biGramSeq
+        (mapVal (fn [vektor] (get vektor 0)) newPathProb 0)]
+          (viterPos (rest words), (update dictionary (first words) (fn [a] newPathForm)),
+                    biGramMap, (union backtrackMap biGramSeq), newPathForm)
+   ))))
+
+(defn backtracker
+  "returns a sequence of postags"
+  [postags, pos]
+ (if (= pos "S")
+   (vector pos)
+  (conj (backtracker postags (get postags pos)) pos)
+ )
+)
