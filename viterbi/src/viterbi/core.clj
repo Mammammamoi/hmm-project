@@ -42,48 +42,28 @@
      with a function f"
    [f, oldHashMap, withKey]
    (if (= withKey 1)
-   (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
-   (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))
-   )
-  )
-
-  (defn merge-filter
-    [f, firstHashMap, secondHashMap, result]
-    (if (= firstHashMap {})
-      result
-    (let [findKey (key (first firstHashMap))]
-      (if (contains? secondHashMap findKey)
-       (merge-filter f (dissoc firstHashMap findKey) secondHashMap
-       (conj result (vector findKey
-         (f  (get firstHashMap findKey) (get secondHashMap findKey)))))
-         (merge-filter f (dissoc firstHashMap findKey) secondHashMap result)))
-     )
-  )
+     (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
+   (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))))
 
  ;keyWords: Liste von Wörtern, priMapVa: hash-map mit wörtern und POS
  ;biMapVal: hash-map mit POS und POS, maximum: [POS mit der größte W-keit]
  (defn maxVal
+   "returns the maximal probability with the corresponding pos-tag"
    [keyPOS, priVal, biMapVal, maximum, probSeq]
    (if (empty? keyPOS)
-    maximum
-    (let [newProb (vector (first keyPOS)
-    (* (* (get biMapVal (first keyPOS)) priVal) (get probSeq (first keyPOS))))]
-     (if (> (get newProb 1) (get maximum  1))
-       (maxVal (rest keyPOS) priVal biMapVal newProb probSeq)
-       (maxVal (rest keyPOS) priVal biMapVal maximum probSeq)
-     )
-    )
-   )
-
-   )
+     maximum
+   (let [newProb (vector (first keyPOS)
+          (* (* (get biMapVal (first keyPOS)) priVal) (get probSeq (first keyPOS))))]
+      (if (> (get newProb 1) (get maximum  1))
+        (maxVal (rest keyPOS) priVal biMapVal newProb probSeq)
+      (maxVal (rest keyPOS) priVal biMapVal maximum probSeq)))))
 
  (defn get-ins
    [hashMap keys key]
    (if (empty? keys)
     {}
-     (let [value (get-in hashMap (vector (first keys) key))]
-       (conj (get-ins hashMap (rest keys) key) [(first keys) value])))
-  )
+   (let [value (get-in hashMap (vector (first keys) key))]
+       (conj (get-ins hashMap (rest keys) key) [(first keys) value]))))
 
 
   ; pathProb (hash-map POS1 maxProb POS2 maxProb)
@@ -94,22 +74,18 @@
    [words, dictionary, biGramMap, backtrackMap, pathProb]
    (if (empty? words)
      (vector dictionary backtrackMap)
-    (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
-    (get-ins biGramMap (keys pathProb) k)
-       ["a" 0] pathProb))
-      (get dictionary (first words)) 1)]
+   (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
+          (get-ins biGramMap (keys pathProb) k) ["a" 0] pathProb))
+          (get dictionary (first words)) 1)]
       (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
-        [outPos (get maxVect 1)])) biGramSeq
-        (mapVal (fn [vektor] (get vektor 0)) newPathProb 0)]
+            [outPos (get maxVect 1)])) biGramSeq (mapVal (fn [vektor] (get vektor 0))
+            newPathProb 0)]
           (viterPos (rest words), (update dictionary (first words) (fn [a] newPathForm)),
-                    biGramMap, (union backtrackMap biGramSeq), newPathForm)
-   ))))
+                    biGramMap, (union backtrackMap biGramSeq), newPathForm)))))
 
 (defn backtracker
   "returns a sequence of postags"
   [postags, pos]
  (if (= pos "S")
    (vector pos)
-  (conj (backtracker postags (get postags pos)) pos)
- )
-)
+ (conj (backtracker postags (get postags pos)) pos)))
