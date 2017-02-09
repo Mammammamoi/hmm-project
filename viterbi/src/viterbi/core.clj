@@ -1,8 +1,9 @@
-(ns viterbi.core)
+(ns viterbi.core
+  (:gen-class))
 (use '[clojure.set :only (union)])
 (use '[clojure.string :only (split)])
 
-(defn foo
+(defn -main
   "I don't do a whole lot. I just make you smile."
   [x]
   (println x "Hello, Universe!"))
