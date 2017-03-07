@@ -67,8 +67,9 @@
   [:dali/page
     (into [] (concat [:dali/matrix {:position [20 20] :columns (count sentence) :row-gap 5
      :column-gap 20}]
-     (let [pairVec (createPairVec sentence (filterDict sentence dict {}) [] [])]
-        (map (fn [taggedWord] (createNode (get taggedWord 0) (get taggedWord 1)))
+     (let [pairVec (apply vector [] (createPairVec sentence (filterDict sentence dict {}) [] []))]
+        (map (fn [taggedWord] (if (= taggedWord :_) :_
+                               (createNode (get taggedWord 0) (get taggedWord 1))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))
      ]
   )
