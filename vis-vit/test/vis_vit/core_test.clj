@@ -24,3 +24,10 @@
               ["werden" "KOPV"]
               ["geschickt" "PART"]
               :_]))))
+
+  (deftest dataVisualization
+    (testing "Creation of Visualization Components"
+     (is (= (connect2Columns [["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]])
+     [[:dali/connect {:from "wir|NAM", :to "werden|MV", :dali/marker-end :sharp}]
+     [:dali/connect {:from "wir|NAM", :to "werden|KOPV", :dali/marker-end :sharp}]]
+         ))))

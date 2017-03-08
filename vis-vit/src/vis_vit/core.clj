@@ -60,18 +60,33 @@
      [:rect {:id text :stroke {:width 3} :fill :white} :_ [(* (count text) 9) 20]]
      [:text {:fill :black :font-family "Verdana" :font-size 14} text]]))
 
+  (defn connect2Columns
+    "creates links between nodes in two columns"
+    [firstColumn secColumn]
+    (if (empty? firstColumn)
+      []
+    (apply vector (concat (connect2Columns (rest firstColumn) secColumn)
+     (apply vector (map
+                   (fn [x] [:dali/connect
+                     {:from (str (get (first firstColumn) 0)"|"(get (first firstColumn) 1))
+                      :to (str (get x 0) "|" (get x 1)) :dali/marker-end :sharp}])
+                   secColumn))))))
+
 (defn graph
   "Creates a graph. The nodes are rectangles with the words of the sentence
   and their corresponding wordtags"
   [sentence dict]
-  [:dali/page
+  (concat [:dali/page
     (into [] (concat [:dali/matrix {:position [20 20] :columns (count sentence) :row-gap 5
      :column-gap 20}]
      (let [pairVec (apply vector [] (createPairVec sentence (filterDict sentence dict {}) [] []))]
         (map (fn [taggedWord] (if (= taggedWord :_) :_
                                (createNode (get taggedWord 0) (get taggedWord 1))))
-         (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))
-     ]
+         (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
+     (apply vector (map (fn [firstC secC] (if (empty? secC) nil
+                                           (connect2Columns firstC secC)))
+                  (createPairVec sentence (filterDict sentence dict {}) [] [])
+                  (rest (createPairVec sentence (filterDict sentence dict {}) [] []))  )))
   )
 
   (defn createVitGraph
