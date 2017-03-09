@@ -8,15 +8,18 @@
   [x]
   (println x "Hello, Universe!"))
 
-  (def shortEmission (hash-map "wir" (hash-map "NAM" 0.2) "werden" (hash-map "MV" 0.3
-  "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "S" 1)))
+  (def shortEmission (hash-map "X" (hash-map "SA" 1) "wir" (hash-map "NAM" 0.2) "werden" (hash-map "MV" 0.3
+  "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "SZ" 1) "/X" (hash-map "SE" 1)))
 
-  (def shortBigram (hash-map "ADJ" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.4
-   "S" 0.1) "MV" (hash-map "ADJ" 0.2 "MV" 0.3 "KOPV" 0.1 "NAM" 0.1 "PART" 0.2 "S" 0.1)
-   "KOPV" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.1 "S" 0.1)
-   "NAM" (hash-map "ADJ" 0.05 "MV" 0.4 "KOPV" 0.3 "NAM" 0.05 "PART" 0.1 "S" 0.1)
-   "PART" (hash-map "ADJ" 0.3 "MV" 0.1 "KOPV" 0.1 "NAM" 0.1 "PART" 0.3 "S" 0.1)
-     "S" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1 "S" 0)   ))
+  (def shortBigram
+(hash-map "ADJ" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.4 "SA" 0 "SE" 0 "SZ" 0.1)
+   "MV" (hash-map "ADJ" 0.2 "MV" 0.3 "KOPV" 0.1 "NAM" 0.1 "PART" 0.2 "SZ" 0.1 "SA" 0.1 "SE" 0)
+   "KOPV" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.1 "SZ" 0.1 "SA" 0.1 "SE" 0)
+   "NAM" (hash-map "ADJ" 0.05 "MV" 0.4 "KOPV" 0.3 "NAM" 0.05 "PART" 0.1 "SZ" 0.1 "SA" 0.1 "SE" 0)
+   "PART" (hash-map "ADJ" 0.3 "MV" 0.1 "KOPV" 0.1 "NAM" 0.1 "PART" 0.3 "SZ" 0.1 "SA" 0.1 "SE" 0)
+     "SZ" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1 "SE" 1 "SZ" 0 "SA" 0)
+     "SA" (hash-map "NAM" 0.3 "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "PART" 0.1 "SE" 0 "SZ" 0 "SA" 1)
+     "SE" (hash-map "MV" 0 "KOPV" 0 "NAM" 0 "PART" 0 "SE" 1 "SZ" 0 "SA" 0 "SZ" 0)))
 
   (def emission (hash-map "er" {"PPRO" 1, "SA" 0.5}, "Andrew" {"NAM" 0.04}, "J." {"NAM" 0.04}, "Viterbi" {"NAM" 0.04}, "Dekodierung" {"NAM" 0.04},
   "Faltungscodes" {"NAM" 0.08}, "Nebenproduk" {"NAM" 0.04}, "Analyse" {"NAM" 0.04}, "Fehlerwahrscheinlichkeit" {"NAM" 0.04},
@@ -74,26 +77,28 @@
   (defn viterPos
     "implementation of the viterbi-algorithm"
    [words, dictionary, biGramMap, backtrackMap, pathProb]
-   (if (empty? words)
-     (vector dictionary backtrackMap)
-   (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
+   (if (= (first words) "X")
+     (viterPos (rest words) dictionary biGramMap backtrackMap pathProb)
+    (if (empty? words)
+      (vector dictionary backtrackMap)
+    (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
           (get-ins biGramMap (keys pathProb) k) ["a" 0] pathProb))
           (get dictionary (first words)) 1)]
-      (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
+       (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
             [outPos (get maxVect 1)])) biGramSeq (mapVal (fn [vektor] (get vektor 0))
             newPathProb 0)]
           (viterPos (rest words), (update dictionary (first words) (fn [a] newPathForm)),
-                    biGramMap, (union backtrackMap biGramSeq), newPathForm)))))
+                    biGramMap, (union backtrackMap biGramSeq), newPathForm))))))
 
   (defn backtracker
   "returns a sequence of postags"
    [postags, pos]
-  (if (= pos "S")
-   (vector pos)
+  (if (= pos "SA")
+   [pos]
   (conj (backtracker postags (get postags pos)) pos)))
 
   (defn bestSeq
    "returns the most probable sequence of postags"
    [satz, dict, postags]
    (backtracker postags
-     (first (apply max-key val (get dict (re-find #"\w+" (last (split satz #" "))))))))
+     (first (apply max-key val (get dict (last (split satz #" ")))))))

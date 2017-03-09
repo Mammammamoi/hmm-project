@@ -21,17 +21,17 @@
    (deftest viterbitest
      (testing "Tests zum Viterbi-Algorithmus"
     (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
-    (is (= (viterPos '("wir" "werden" "geschickt" ".") shortEmission shortBigram {} {"S" 1})
-     (vector {"wir" {"NAM" 0.06}, "geschickt" {"ADJ" 3.6E-4, "PART" 5.760000000000001E-4},
-     "werden" {"MV" 0.0072, "KOPV" 0.009}, "." {"S" 5.760000000000002E-5}}
-     {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
+    (is (= (viterPos '("X" "wir" "werden" "geschickt" "." "/X") shortEmission shortBigram {} {"SA" 1})
+     (vector {"/X" {"SE" 5.760000000000002E-5} "wir" {"NAM" 0.06}, "geschickt" {"ADJ" 3.6E-4, "PART" 5.760000000000001E-4},
+     "werden" {"MV" 0.0072, "KOPV" 0.009}, "." {"SZ" 5.760000000000002E-5} "X" {"SA" 1}}
+     {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"}
      )))))
 
     (deftest backtrackerTest
       (testing "Tests zur Herausgabe der POS-Tags in richtiger Reihenfolge"
-        (is (= (backtracker {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"}
-          "PART") (vector "S" "NAM" "MV" "PART")))
-        (is (= (bestSeq "wir werden geschickt."
+        (is (= (backtracker {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"}
+          "SE") (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))
+        (is (= (bestSeq "X wir werden geschickt. /X"
            shortEmission
-           {"NAM" "S", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "S" "PART"})
-           (vector "S" "NAM" "MV" "PART")))))
+           {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"})
+           (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))))
