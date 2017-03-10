@@ -8,22 +8,27 @@
 
 (deftest datastructures
   (testing "All datastructures not visualizing"
-   (is (= (createPairVec '("wir" "werden" "geschickt" ".") {"wir" ["NAM"], "werden"
-                         ["MV" "KOPV"], "geschickt" ["ADJ" "PART"], "." ["S"]} [] [])
-         [[["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]]
-         [["geschickt" "ADJ"] ["geschickt" "PART"]] [["." "S"]]] ))
-    (is (= (transposeMatrix [ [] [["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]]
-                            [["geschickt" "ADJ"] ["geschickt" "PART"]] [["." "S"]]]
+   (is (= (createPairVec '("X" "wir" "werden" "geschickt" "." "/X") {"X" ["SA"] "wir" ["NAM"], "werden"
+                         ["MV" "KOPV"], "geschickt" ["ADJ" "PART"], "." ["SZ"] "/X" ["SE"]} [] [])
+         [[["X" "SA"]] [["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]]
+         [["geschickt" "ADJ"] ["geschickt" "PART"]] [["." "SZ"]] [["/X" "SE"]]] ))
+    (is (= (transposeMatrix [ [] [["X" "SA"]] [["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]]
+                            [["geschickt" "ADJ"] ["geschickt" "PART"]] [["." "SZ"]] [["/X" "SE"]]]
              2 0 [])
-             [["wir" "NAM"]
+             [["X" "SA"]
+              ["wir" "NAM"]
               ["werden" "MV"]
               ["geschickt" "ADJ"]
-              ["." "S"]
+              ["." "SZ"]
+              ["/X" "SE"]
 
+              :_
               :_
               ["werden" "KOPV"]
               ["geschickt" "PART"]
-              :_]))))
+              :_
+              :_]))
+      (is (= (mapTwoElements * [1 2 3 4]) [2 6 12]))))
 
   (deftest dataVisualization
     (testing "Creation of Visualization Components"
