@@ -94,38 +94,45 @@
 
   (defn connect2Columns
     "creates links between nodes in two columns"
-    [firstColumn secColumn]
+    [firstColumn secColumn bestSeq]
     (if (empty? firstColumn)
       []
-    (apply vector (concat (connect2Columns (rest firstColumn) secColumn)
+    (apply vector (concat (connect2Columns (rest firstColumn) secColumn bestSeq)
      (apply vector (map
-                   (fn [x] [:dali/connect
-                     {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
-                      :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :dali/marker-end :sharp}])
+                   (fn [x]
+                    (if (and (some (fn [y2] (= y2 (str (get x 0)"|"(get x 1)))) bestSeq)
+                         (some (fn [y1] (= y1 (str (get (first firstColumn) 0) "|" (str (get (first firstColumn)1))))) bestSeq))
+                       [:dali/connect
+                       {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
+                        :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :red :stroke-width 2.5 :dali/marker-end {:id :sharp :style "fill: red;"}}]
+                        [:dali/connect
+                        {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
+                         :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :black :stroke-width 2.5 :dali/marker-end :sharp}]))
                    secColumn))))))
 
 (defn graph
   "Creates a graph. The nodes are rectangles with the words of the sentence
   and their corresponding wordtags"
-  [sentence dict]
+  [sentence dict bestSeq]
   (into [] (concat [:dali/page
      [:defs
-     (s/css (str "polyline {fill: none; stroke: black;}\n"))
      (prefab/sharp-arrow-marker :sharp)]
-    (into [] (concat [:dali/matrix {:position [20 20] :columns (count sentence) :row-gap 5
+    (into [] (concat [:dali/matrix {:position [20 20] :columns (count sentence) :row-gap 10
      :column-gap 20}]
      (let [pairVec (apply vector [] (createPairVec sentence (filterDict sentence dict {}) [] []))]
         (map (fn [taggedWord] (if (= taggedWord :_) :_
                                (createNode (get taggedWord 0) (get taggedWord 1))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
-       (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC))
+       (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC bestSeq))
                   (createPairVec sentence (filterDict sentence dict {}) [] []))))
   )))
 
   (defn createVitGraph
     "Creates a node-link-diagram and saves it in a
     text.png document"
-    [name sentence dict]
+    [name sentence dict bestSeq]
     ;(println (graph sentence dict)))
-    (io/render-svg (graph sentence dict) (apply str name ".svg") )
-    (io/render-png (graph sentence dict) (apply str name ".png")))
+    (let [bestSeq (apply vector (map (fn [num]
+                    (str (get (apply vector sentence) num) "|" (get (apply vector bestSeq) num))) (range (count bestSeq))))]
+    (io/render-svg (graph sentence dict bestSeq) (apply str name ".svg") )
+    (io/render-png (graph sentence dict bestSeq) (apply str name ".png"))))
