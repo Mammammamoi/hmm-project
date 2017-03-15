@@ -101,9 +101,8 @@
   "creates a node of a graph with text in the centre of the node"
   [word pos num]
    [:dali/align {:axis :center}
-     [:rect {:id (keyword (str (escapePunctChar word) "|" pos)) :stroke {:width 3} :fill :white} :_ [(* (count (str word "|" pos "(" num ")")) 9) 20]]
+     [:rect {:id (keyword (str (escapePunctChar word) "|" pos)) :stroke {:width 3} :fill :white} :_ [(* (count (str word "|" pos "(" num ")")) 9) 40]]
      (text-stack (str word "|" pos) (str "" num))])
-     ;[:text {:fill :black :font-family "Verdana" :font-size 14} (str word "|" pos "(" num ")")]])
 
   (defn connect2Columns
     "creates links between nodes in two columns"
