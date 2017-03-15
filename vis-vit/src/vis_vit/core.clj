@@ -2,6 +2,7 @@
   (:gen-class))
 (require '[dali.io :as io] '[dali.prefab :as prefab]
  '[dali.layout.align] '[dali.layout.matrix] '[dali.layout.connect]
+ '[dali.layout.stack]
   '[dali.syntax :as s])
 (use '[clojure.string :only (replace includes?)])
 
@@ -15,6 +16,7 @@
   (println "Visualize the World!"))
 
 (defn escapePunctChar
+  "escapes certain punctuation characters"
   [text]
   (cond
    (includes? text "&") (replace text #"\&" "&amp")
@@ -36,7 +38,8 @@
    (includes? text "(")(replace text #"\(" "&leftbr")
    (includes? text ")")(replace text #"\)" "&rightbr")
    (includes? text "[")(replace text #"\[" "&leftinterv")
-   (includes? text "]")(replace text #"\]" "&rightinterv")))
+   (includes? text "]")(replace text #"\]" "&rightinterv")
+   :else text))
 
 (defn filterDict
   "Filter the entry of the dictionary"
@@ -45,7 +48,7 @@
      filteredDict
    (filterDict (rest sentence) dict
      (into (hash-map) (concat filteredDict
-                       {(first sentence) (into [] (keys (get dict (first sentence))))}))
+                       {(first sentence) (get dict (first sentence))}))
      )))
 
 (defn createPairVec
@@ -55,8 +58,10 @@
   (if (empty? (get filteredDict (first sentence)))
      (createPairVec (rest sentence) filteredDict [] (conj pairsList pairs))
   (createPairVec sentence (update-in filteredDict [(first sentence)]
-                           (fn [list] (into [] (rest list ))))
-    (conj pairs [(first sentence) (first (get filteredDict (first sentence)))])
+                           (fn [list] (into (hash-map) (rest list))))
+    (conj pairs [(first sentence) (first (keys (get filteredDict (first sentence))))
+                  (get-in filteredDict [(first sentence)
+                                        (first (keys (get filteredDict (first sentence))))])])
       pairsList)))
 )
 
@@ -85,12 +90,20 @@
       []
    (concat (vector (f (first coll) (second coll))) (mapTwoElements f (rest coll)))))
 
+(defn text-stack
+  "Create a text with multilines"
+  [wordPos num]
+  [:dali/stack {:direction :down :gap 6}
+   [:text {:font-family "Verdana" :font-size 14} wordPos]
+   [:text {:font-family "Verdana" :font-size 14} num]])
+
 (defn createNode
   "creates a node of a graph with text in the centre of the node"
-  [word pos]
+  [word pos num]
    [:dali/align {:axis :center}
-     [:rect {:id (keyword (str (escapePunctChar word) "|" pos)) :stroke {:width 3} :fill :white} :_ [(* (count (str word "|" pos)) 9) 20]]
-     [:text {:fill :black :font-family "Verdana" :font-size 14} (str word "|" pos)]])
+     [:rect {:id (keyword (str (escapePunctChar word) "|" pos)) :stroke {:width 3} :fill :white} :_ [(* (count (str word "|" pos "(" num ")")) 9) 20]]
+     (text-stack (str word "|" pos) (str "" num))])
+     ;[:text {:fill :black :font-family "Verdana" :font-size 14} (str word "|" pos "(" num ")")]])
 
   (defn connect2Columns
     "creates links between nodes in two columns"
@@ -100,7 +113,7 @@
     (apply vector (concat (connect2Columns (rest firstColumn) secColumn bestSeq)
      (apply vector (map
                    (fn [x]
-                    (if (and (some (fn [y2] (= y2 (str (get x 0)"|"(get x 1)))) bestSeq)
+                    (if (and (some (fn [y2] (and (= y2 (str (get x 0)"|"(get x 1))) (not (= y2 nil)))) bestSeq)
                          (some (fn [y1] (= y1 (str (get (first firstColumn) 0) "|" (str (get (first firstColumn)1))))) bestSeq))
                        [:dali/connect
                        {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
@@ -121,7 +134,7 @@
      :column-gap 20}]
      (let [pairVec (apply vector [] (createPairVec sentence (filterDict sentence dict {}) [] []))]
         (map (fn [taggedWord] (if (= taggedWord :_) :_
-                               (createNode (get taggedWord 0) (get taggedWord 1))))
+                               (createNode (get taggedWord 0) (get taggedWord 1) (get taggedWord 2))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
        (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC bestSeq))
                   (createPairVec sentence (filterDict sentence dict {}) [] []))))
@@ -131,7 +144,6 @@
     "Creates a node-link-diagram and saves it in a
     text.png document"
     [name sentence dict bestSeq]
-    ;(println (graph sentence dict)))
     (let [bestSeq (apply vector (map (fn [num]
                     (str (get (apply vector sentence) num) "|" (get (apply vector bestSeq) num))) (range (count bestSeq))))]
     (io/render-svg (graph sentence dict bestSeq) (apply str name ".svg") )
