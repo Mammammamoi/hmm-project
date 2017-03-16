@@ -1,4 +1,4 @@
-(ns viterbi.core
+(ns viterbi.algorithm
   (:gen-class))
 (use '[clojure.set :only (union)])
 (use '[clojure.string :only (split)])

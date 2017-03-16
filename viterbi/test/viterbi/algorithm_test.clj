@@ -1,6 +1,6 @@
-(ns viterbi.core-test
+(ns viterbi.algorithm-test
   (:require [clojure.test :refer :all]
-            [viterbi.core :refer :all]))
+            [viterbi.algorithm :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
