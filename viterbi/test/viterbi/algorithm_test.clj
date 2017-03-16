@@ -31,7 +31,7 @@
       (testing "Tests zur Herausgabe der POS-Tags in richtiger Reihenfolge"
         (is (= (backtracker {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"}
           "SE") (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))
-        (is (= (bestSeq "X wir werden geschickt. /X"
+        (is (= (bestSeq '("X" "wir" "werden" "geschickt." "/X")
            shortEmission
            {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"})
            (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))))

@@ -1,4 +1,5 @@
 (ns viterbi.algorithm
+  (:require [viterbi.visualization :as vis])
   (:gen-class))
 (use '[clojure.set :only (union)])
 (use '[clojure.string :only (split)])
@@ -50,8 +51,6 @@
      (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
    (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))))
 
- ;keyWords: Liste von Wörtern, priMapVa: hash-map mit wörtern und POS
- ;biMapVal: hash-map mit POS und POS, maximum: [POS mit der größte W-keit]
  (defn maxVal
    "returns the maximal probability with the corresponding pos-tag"
    [keyPOS, priVal, biMapVal, maximum, probSeq]
@@ -70,10 +69,6 @@
    (let [value (get-in hashMap (vector (first keys) key))]
        (conj (get-ins hashMap (rest keys) key) [(first keys) value]))))
 
-
-  ; pathProb (hash-map POS1 maxProb POS2 maxProb)
-  ; dicBiVec [hash-map von dic und BiMap]
-  ; backtrackMap (hash-map secondPOS firstPOS)
   (defn viterPos
     "implementation of the viterbi-algorithm"
    [words, dictionary, biGramMap, backtrackMap, pathProb]
@@ -99,6 +94,13 @@
 
   (defn bestSeq
    "returns the most probable sequence of postags"
-   [satz, dict, postags]
+   [sentence, dict, postags]
    (backtracker postags
-     (first (apply max-key val (get dict (last (split satz #" ")))))))
+     (first (apply max-key val (get dict (last sentence))))))
+
+  (defn visualizeViterbi
+    [sentence, dict, biGramMap]
+    (vis/createVitGraph "InitGraph" sentence dict '())
+    (let [vitVec (viterPos sentence dict biGramMap {} {"SA" 1})]
+       (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0)
+       (bestSeq sentence (vitVec 0) (vitVec 1)))))
