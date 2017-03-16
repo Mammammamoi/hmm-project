@@ -1,6 +1,6 @@
-(ns vis-vit.core-test
+(ns vis-vit.visualization-test
   (:require [clojure.test :refer :all]
-            [vis-vit.core :refer :all]))
+            [vis-vit.visualization :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail not."

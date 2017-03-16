@@ -1,5 +1,4 @@
-(ns vis-vit.core
-  (:gen-class))
+(ns vis-vit.visualization)
 (require '[dali.io :as io] '[dali.prefab :as prefab]
  '[dali.layout.align] '[dali.layout.matrix] '[dali.layout.connect]
  '[dali.layout.stack]
@@ -10,7 +9,7 @@
  "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "SZ" 1)
  "/X" (hash-map "SE" 1)))
 
-(defn -main
+(defn foo
   "I don't do a whole lot."
   [& args]
   (println "Visualize the World!"))
@@ -48,8 +47,7 @@
      filteredDict
    (filterDict (rest sentence) dict
      (into (hash-map) (concat filteredDict
-                       {(first sentence) (get dict (first sentence))}))
-     )))
+                       {(first sentence) (get dict (first sentence))})))))
 
 (defn createPairVec
   [sentence filteredDict pairs pairsList]
@@ -62,8 +60,7 @@
     (conj pairs [(first sentence) (first (keys (get filteredDict (first sentence))))
                   (get-in filteredDict [(first sentence)
                                         (first (keys (get filteredDict (first sentence))))])])
-      pairsList)))
-)
+      pairsList))))
 
 (defn countRows
   [matrixVec maximum]
@@ -136,8 +133,7 @@
                                (createNode (get taggedWord 0) (get taggedWord 1) (get taggedWord 2))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
        (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC bestSeq))
-                  (createPairVec sentence (filterDict sentence dict {}) [] []))))
-  )))
+                  (createPairVec sentence (filterDict sentence dict {}) [] [])))))))
 
   (defn createVitGraph
     "Creates a node-link-diagram and saves it in a
