@@ -99,6 +99,7 @@
      (first (apply max-key val (get dict (last sentence))))))
 
   (defn visualizeViterbi
+    "Visuizes the viterbi-algorithm"
     [sentence, dict, biGramMap]
     (vis/createVitGraph "InitGraph" sentence dict '())
     (let [vitVec (viterPos sentence dict biGramMap {} {"SA" 1})]
