@@ -45,14 +45,15 @@
 
   (defn mapVal
     "Maps the values of a hash-map into a new hash-map
-     with a function f"
+     with a function f. The argument withKey specifies if
+     the function f calculates the new value with the key or without it."
    [f, oldHashMap, withKey]
    (if (= withKey 1)
      (into (hash-map) (for [[key val] oldHashMap] [key (f key val)]))
    (into (hash-map) (for [[key val] oldHashMap] [key (f val)]))))
 
  (defn maxVal
-   "returns the maximal probability with the corresponding pos-tag"
+   "Returns the maximal probability with the corresponding pos-tag"
    [keyPOS, priVal, biMapVal, maximum, probSeq]
    (if (empty? keyPOS)
      maximum
@@ -63,6 +64,10 @@
       (maxVal (rest keyPOS) priVal biMapVal maximum probSeq)))))
 
  (defn get-ins
+   "Returns the value of a key in specific hash-maps.
+   Those specific hash-maps are identified through their keys.
+   The argument hashMap contains the hash-map, whose keys have a hash-map
+   as value."
    [hashMap keys key]
    (if (empty? keys)
     {}
@@ -70,7 +75,8 @@
        (conj (get-ins hashMap (rest keys) key) [(first keys) value]))))
 
   (defn viterPos
-    "implementation of the viterbi-algorithm"
+    "Implementation of the viterbi-algorithm. The argument words should
+    be a list of words ordered by their position in the sentence."
    [words, dictionary, biGramMap, backtrackMap, pathProb]
    (if (= (first words) "X")
      (viterPos (rest words) dictionary biGramMap backtrackMap pathProb)
@@ -86,20 +92,23 @@
                     biGramMap, (union backtrackMap biGramSeq), newPathForm))))))
 
   (defn backtracker
-  "returns a sequence of postags"
+  "Returns a sequence of postags as a hash-map. This hash-maps contains bigrams,
+  in wich the keys are the postags. The order of the bigrams is reversed."
    [postags, pos]
   (if (= pos "SA")
    [pos]
   (conj (backtracker postags (get postags pos)) pos)))
 
   (defn bestSeq
-   "returns the most probable sequence of postags"
+   "Returns the most probable sequence of postags using the methode backtracker."
    [sentence, dict, postags]
    (backtracker postags
      (first (apply max-key val (get dict (last sentence))))))
 
   (defn visualizeViterbi
-    "Visuizes the viterbi-algorithm"
+    "Visualizes the viterbi-algorithm through two graphs. One graph shows the initial
+    links of the posttags related to the sentence. The second graph shows the links
+    and probabilities after using the viterbi-algorithm."
     [sentence, dict, biGramMap]
     (vis/createVitGraph "InitGraph" sentence dict '())
     (let [vitVec (viterPos sentence dict biGramMap {} {"SA" 1})]
