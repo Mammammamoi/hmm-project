@@ -40,15 +40,6 @@
    (includes? text "]")(replace text #"\]" "&rightinterv")
    :else text))
 
-(defn filterDict
-  "Filter the entry of the dictionary"
-  [sentence dict filteredDict]
-  (if (empty? sentence)
-     filteredDict
-   (filterDict (rest sentence) dict
-     (into (hash-map) (concat filteredDict
-                       {(first sentence) (get dict (first sentence))})))))
-
 (defn createPairVec
   [sentence filteredDict pairs pairsList]
   (if (empty? sentence)
@@ -122,24 +113,24 @@
 (defn graph
   "Creates a graph. The nodes are rectangles with the words of the sentence
   and their corresponding wordtags"
-  [sentence dict bestSeq]
+  [sentence filteredDict bestSeq]
   (into [] (concat [:dali/page
      [:defs
      (prefab/sharp-arrow-marker :sharp)]
     (into [] (concat [:dali/matrix {:position [20 20] :columns (count sentence) :row-gap 10
      :column-gap 20}]
-     (let [pairVec (apply vector [] (createPairVec sentence (filterDict sentence dict {}) [] []))]
+     (let [pairVec (apply vector [] (createPairVec sentence filteredDict [] []))]
         (map (fn [taggedWord] (if (= taggedWord :_) :_
                                (createNode (get taggedWord 0) (get taggedWord 1) (get taggedWord 2))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
        (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC bestSeq))
-                  (createPairVec sentence (filterDict sentence dict {}) [] [])))))))
+                  (createPairVec sentence filteredDict [] [])))))))
 
   (defn createVitGraph
     "Creates a node-link-diagram and saves it in a
     text.png document"
-    [name sentence dict bestSeq]
+    [name sentence filteredDict bestSeq]
     (let [bestSeq (apply vector (map (fn [num]
                     (str (get (apply vector sentence) num) "|" (get (apply vector bestSeq) num))) (range (count bestSeq))))]
-    (io/render-svg (graph sentence dict bestSeq) (apply str name ".svg") )
-    (io/render-png (graph sentence dict bestSeq) (apply str name ".png"))))
+    (io/render-svg (graph sentence filteredDict bestSeq) (apply str name ".svg") )
+    (io/render-png (graph sentence filteredDict bestSeq) (apply str name ".png"))))

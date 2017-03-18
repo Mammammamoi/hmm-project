@@ -8,10 +8,6 @@
 
  (deftest maxValtest
    (testing "Tests von Methoden, welche mit der Methode maxVal in vorkommen oder von maxVal selbst"
-     (is (= (merge-with * (get {"geschickt" {"Part" 0.4},
-      "werden" {"AuxV" 0.3, "KopV" 0.5}} "geschickt")
-     {"AuxV" 0.4 "KopV" 0.3 "Part" 0.1})
-    {"Part" 0.04000000000000001, "AuxV" 0.4, "KopV" 0.3} ))
     (is (= (mapVal (fn [k, v] (* v (* k 2)) {2 0.04000000000000001}) {2 (* 0.04000000000000001 4)} 1 )))
     (is (=   (maxVal (keys (hash-map "AuxV" 0.0072, "KopV" 0.009))
         0.2

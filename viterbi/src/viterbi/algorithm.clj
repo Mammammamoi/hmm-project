@@ -43,6 +43,15 @@
 "NAM" 0.25, "PUNKT" 0.25), "PUNKT" (hash-map "ART" 0.5, "PPRO" 0.5, "SE" 0.666, "CE" 0.2),
 "V" (hash-map "ADV" 0.333, "SE" 0.333, "PREP" 0.333 )))
 
+(defn filterDict
+  "Filter the entry of the dictionary"
+  [sentence dict filteredDict]
+  (if (empty? sentence)
+     filteredDict
+   (filterDict (rest sentence) dict
+     (into (hash-map) (concat filteredDict
+                       {(first sentence) (get dict (first sentence))})))))
+
   (defn mapVal
     "Maps the values of a hash-map into a new hash-map
      with a function f. The argument withKey specifies if
@@ -103,14 +112,14 @@
    "Returns the most probable sequence of postags using the methode backtracker."
    [sentence, dict, postags]
    (backtracker postags
-     (first (apply max-key val (get dict (last sentence))))))
+     (first (apply max-key val (get (filterDict sentence dict {}) (last sentence))))))
 
   (defn visualizeViterbi
     "Visualizes the viterbi-algorithm through two graphs. One graph shows the initial
     links of the posttags related to the sentence. The second graph shows the links
     and probabilities after using the viterbi-algorithm."
     [sentence, dict, biGramMap]
-    (vis/createVitGraph "InitGraph" sentence dict '())
-    (let [vitVec (viterPos sentence dict biGramMap {} {"SA" 1})]
+    (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) '())
+    (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"SA" 1})]
        (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0)
        (bestSeq sentence (vitVec 0) (vitVec 1)))))
