@@ -15,7 +15,7 @@
   (println "Visualize the World!"))
 
 (defn escapePunctChar
-  "escapes certain punctuation characters"
+  "Escapes certain punctuation characters of a text"
   [text]
   (cond
    (includes? text "&") (replace text #"\&" "&amp")
@@ -41,6 +41,9 @@
    :else text))
 
 (defn createPairVec
+  "Forms a vector with vectors. These vectors contain themselves vectors, which
+  always have the same word the first position. At the second position is one of the
+  posttags and at the last position is the corresponding probability."
   [sentence filteredDict pairs pairsList]
   (if (empty? sentence)
      pairsList
@@ -54,6 +57,8 @@
       pairsList))))
 
 (defn countRows
+  "Returns the maximum finding the longest vector in matrixVec. The argument
+  matrixVec should be a vector created by the  method createPairVec."
   [matrixVec maximum]
   (if (empty? matrixVec)
     maximum
@@ -73,6 +78,8 @@
              matrixVec )))))
 
 (defn mapTwoElements
+  "Uses the function f and evaluates the value of two elements in the collection.
+  Hence returns a collection which is shorter as coll by one element."
   [f coll]
   (if (= (count coll) 1)
       []
