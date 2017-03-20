@@ -99,28 +99,44 @@
      [:rect {:id (keyword (str (escapePunctChar word) "|" pos)) :stroke {:width 3} :fill :white} :_ [(* (count (str word "|" pos "(" num ")")) 9) 40]]
      (text-stack (str word "|" pos) (str "" num))])
 
+  (defn filterColumns
+    "Filters the nodes in the columns which are not in any sequenz-path"
+    [column1 column2 backtrackMap]
+    (let [newColumn2 (into [] (filter (fn [node] (if (some #(= % (node 1)) (keys backtrackMap))
+                                             true
+                                          false))
+                      column2))]
+      (let [valNodes (map (fn [keyNode] (get backtrackMap keyNode))
+                             (map (fn [node] (node 1)) newColumn2))]
+      (conj (vector (into [] (filter (fn [node] (if (some #(= % (node 1)) valNodes)
+                                              true
+                                             false))
+                          column1)))
+                 newColumn2)))
+  )
+
   (defn connect2Columns
     "creates links between nodes in two columns"
     [firstColumn secColumn bestSeq]
     (if (empty? firstColumn)
       []
     (apply vector (concat (connect2Columns (rest firstColumn) secColumn bestSeq)
-     (apply vector (map
-                   (fn [x]
-                    (if (and (some (fn [y2] (and (= y2 (str (get x 0)"|"(get x 1))) (not (= y2 nil)))) bestSeq)
-                         (some (fn [y1] (= y1 (str (get (first firstColumn) 0) "|" (str (get (first firstColumn)1))))) bestSeq))
-                       [:dali/connect
-                       {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
-                        :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :red :stroke-width 2.5 :dali/marker-end {:id :sharp :style "fill: red;"}}]
-                        [:dali/connect
-                        {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
-                         :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :black :stroke-width 2.5 :dali/marker-end :sharp}]))
-                   secColumn))))))
+     (apply vector
+       (map (fn [x]
+              (if (and (some (fn [y2] (and (= y2 (str (get x 0)"|"(get x 1))) (not (= y2 nil)))) bestSeq)
+                      (some (fn [y1] (= y1 (str (get (first firstColumn) 0) "|" (str (get (first firstColumn)1))))) bestSeq))
+                  [:dali/connect
+                  {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
+                  :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :red :stroke-width 2.5 :dali/marker-end {:id :sharp :style "fill: red;"}}]
+                  [:dali/connect
+                  {:from (keyword (str (escapePunctChar (get (first firstColumn) 0))"|"(get (first firstColumn) 1)))
+                  :to (keyword (str (escapePunctChar (get x 0)) "|" (get x 1))) :stroke :black :stroke-width 2.5 :dali/marker-end :sharp}]))
+        secColumn))))))
 
 (defn graph
   "Creates a graph. The nodes are rectangles with the words of the sentence
   and their corresponding wordtags"
-  [sentence filteredDict bestSeq]
+  [sentence filteredDict backtrackMap bestSeq]
   (into [] (concat [:dali/page
      [:defs
      (prefab/sharp-arrow-marker :sharp)]
@@ -130,14 +146,21 @@
         (map (fn [taggedWord] (if (= taggedWord :_) :_
                                (createNode (get taggedWord 0) (get taggedWord 1) (get taggedWord 2))))
          (transposeMatrix pairVec (countRows pairVec 0) 0 [])))))]
-       (apply vector (apply concat (mapTwoElements (fn [firstC secC]  (connect2Columns firstC secC bestSeq))
-                  (createPairVec sentence filteredDict [] [])))))))
+      (if (= backtrackMap {})
+          (apply vector (apply concat (mapTwoElements (fn [firstC secC]
+                                                        (connect2Columns firstC secC bestSeq))
+                                       (createPairVec sentence filteredDict [] []))))
+       (apply vector (apply concat (mapTwoElements (fn [firstC secC]
+                                                     (let [columns (filterColumns firstC secC backtrackMap)]
+                                                          (connect2Columns (columns 0) (columns 1) bestSeq)))
+                                    (createPairVec sentence filteredDict [] []))))
+                  ))))
 
   (defn createVitGraph
     "Creates a node-link-diagram and saves it in a
     text.png document"
-    [name sentence filteredDict bestSeq]
+    [name sentence filteredDict backtrackMap bestSeq]
     (let [bestSeq (apply vector (map (fn [num]
                     (str (get (apply vector sentence) num) "|" (get (apply vector bestSeq) num))) (range (count bestSeq))))]
-    (io/render-svg (graph sentence filteredDict bestSeq) (apply str name ".svg") )
-    (io/render-png (graph sentence filteredDict bestSeq) (apply str name ".png"))))
+    (io/render-svg (graph sentence filteredDict backtrackMap bestSeq) (apply str name ".svg") )
+    (io/render-png (graph sentence filteredDict backtrackMap bestSeq) (apply str name ".png"))))

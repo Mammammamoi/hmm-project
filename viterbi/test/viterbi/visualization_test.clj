@@ -27,7 +27,10 @@
               ["geschickt" "PART" 0.4]
               :_
               :_]))
-      (is (= (mapTwoElements * [1 2 3 4]) [2 6 12]))))
+      (is (= (mapTwoElements * [1 2 3 4]) [2 6 12]))
+      (is (= (filterColumns [["wir" "NAM"] ["wir" "MV"]] [["werden" "MV"] ["werden" "KOPV"]]
+                             {"SE" "SZ", "NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART"})
+            [[["wir" "NAM"]] [["werden" "MV"] ["werden" "KOPV"]]]))))
 
   (deftest dataVisualization
     (testing "Creation of Visualization Components"
