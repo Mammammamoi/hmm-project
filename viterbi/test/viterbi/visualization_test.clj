@@ -2,6 +2,10 @@
   (:require [clojure.test :refer :all]
             [viterbi.visualization :refer :all]))
 
+            (def shortEmission (hash-map "X" (hash-map "SA" 1) "wir" (hash-map "NAM" 0.2) "werden" (hash-map "MV" 0.3
+            "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "SZ" 1)
+            "/X" (hash-map "SE" 1)))
+
 (deftest a-test
   (testing "FIXME, I fail not."
     (is (= 1 1))))

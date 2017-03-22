@@ -1,5 +1,6 @@
 (ns viterbi.algorithm
   (:require [viterbi.visualization :as vis])
+  (:require [viterbi.bigrams :as bi])
   (:gen-class))
 (use '[clojure.set :only (union)])
 (use '[clojure.string :only (split)])
@@ -9,8 +10,8 @@
   [x]
   (println x "Hello, Universe!"))
 
-  (def shortEmission (hash-map "X" (hash-map "SA" 1) "wir" (hash-map "NAM" 0.2) "werden" (hash-map "MV" 0.3
-  "KOPV" 0.5) "geschickt" (hash-map "ADJ" 0.2 "PART" 0.4) "." (hash-map "SZ" 1) "/X" (hash-map "SE" 1)))
+  (def shortEmission (hash-map "<s>" (hash-map "<s>" 1) "wir" (hash-map "PPER" 0.2) "werden" (hash-map "VAINF" 0.3
+  "VVFIN" 0.5) "geschickt" (hash-map "ADJD" 0.2 "VVPP" 0.4) "." (hash-map "$." 1) "</s>" (hash-map "</s>" 1)))
 
   (def shortBigram
 (hash-map "ADJ" (hash-map "ADJ" 0.2 "MV" 0.1 "KOPV" 0.1 "NAM" 0.4 "PART" 0.4 "SA" 0 "SE" 0 "SZ" 0.1)
@@ -20,7 +21,7 @@
    "PART" (hash-map "ADJ" 0.3 "MV" 0.1 "KOPV" 0.1 "NAM" 0.1 "PART" 0.3 "SZ" 0.1 "SA" 0.1 "SE" 0)
      "SZ" (hash-map "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "NAM" 0.3 "PART" 0.1 "SE" 1 "SZ" 0 "SA" 0)
      "SA" (hash-map "NAM" 0.3 "ADJ" 0.3 "MV" 0.2 "KOPV" 0.1 "PART" 0.1 "SE" 0 "SZ" 0 "SA" 1)
-     "SE" (hash-map "MV" 0 "KOPV" 0 "NAM" 0 "PART" 0 "SE" 1 "SZ" 0 "SA" 0 "SZ" 0)))
+     "SE" (hash-map "MV" 0 "KOPV" 0 "PART" 0 "SE" 1 "SZ" 0 "SA" 0 "SZ" 0)))
 
   (def emission (hash-map "er" {"PPRO" 1, "SA" 0.5}, "Andrew" {"NAM" 0.04}, "J." {"NAM" 0.04}, "Viterbi" {"NAM" 0.04}, "Dekodierung" {"NAM" 0.04},
   "Faltungscodes" {"NAM" 0.08}, "Nebenproduk" {"NAM" 0.04}, "Analyse" {"NAM" 0.04}, "Fehlerwahrscheinlichkeit" {"NAM" 0.04},
@@ -81,13 +82,15 @@
    (if (empty? keys)
     {}
    (let [value (get-in hashMap (vector (first keys) key))]
-       (conj (get-ins hashMap (rest keys) key) [(first keys) value]))))
+    (if (= value nil)
+       (conj (get-ins hashMap (rest keys) key) [(first keys) 0])
+     (conj (get-ins hashMap (rest keys) key) [(first keys) value])))))
 
   (defn viterPos
     "Implementation of the viterbi-algorithm. The argument words should
     be a list of words ordered by their position in the sentence."
    [words, dictionary, biGramMap, backtrackMap, pathProb]
-   (if (= (first words) "X")
+   (if (= (first words) "<s>")
      (viterPos (rest words) dictionary biGramMap backtrackMap pathProb)
     (if (empty? words)
       (vector dictionary backtrackMap)
@@ -104,7 +107,8 @@
   "Returns a sequence of postags as a hash-map. This hash-maps contains bigrams,
   in wich the keys are the postags. The order of the bigrams is reversed."
    [postags, pos]
-  (if (= pos "SA")
+   ;(println pos)
+  (if (= pos "<s>")
    [pos]
   (conj (backtracker postags (get postags pos)) pos)))
 
@@ -120,6 +124,6 @@
     and probabilities after using the viterbi-algorithm."
     [sentence, dict, biGramMap]
     (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
-    (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"SA" 1})]
+    (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1})]
        (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
-       (bestSeq sentence (vitVec 0) (vitVec 1)))))
+                           (bestSeq sentence (vitVec 0) (vitVec 1)))))
