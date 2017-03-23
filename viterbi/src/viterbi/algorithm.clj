@@ -1,9 +1,11 @@
 (ns viterbi.algorithm
   (:require [viterbi.visualization :as vis])
   (:require [viterbi.bigrams :as bi])
+  (:require [viterbi.lexicon :as lex])
   (:gen-class))
 (use '[clojure.set :only (union)])
 (use '[clojure.string :only (split)])
+(use 'opennlp.nlp)
 
 (defn -main
   "I don't do a whole lot. I just make you smile."
@@ -43,6 +45,8 @@
 "ADV" 0.056, "SE" 0.056, "ART" 0.333, "NAM" 0.333, "PREP" 0.056, "PTZP" 0.056,"PUNKT" 0.056), "PTZP" (hash-map "KONJ" 0.5,
 "NAM" 0.25, "PUNKT" 0.25), "PUNKT" (hash-map "ART" 0.5, "PPRO" 0.5, "SE" 0.666, "CE" 0.2),
 "V" (hash-map "ADV" 0.333, "SE" 0.333, "PREP" 0.333 )))
+
+(def tokenize (make-tokenizer "models/de-token.bin"))
 
 (defn filterDict
   "Filter the entry of the dictionary"
@@ -107,7 +111,6 @@
   "Returns a sequence of postags as a hash-map. This hash-maps contains bigrams,
   in wich the keys are the postags. The order of the bigrams is reversed."
    [postags, pos]
-   ;(println pos)
   (if (= pos "<s>")
    [pos]
   (conj (backtracker postags (get postags pos)) pos)))
@@ -123,7 +126,7 @@
     links of the posttags related to the sentence. The second graph shows the links
     and probabilities after using the viterbi-algorithm."
     [sentence, dict, biGramMap]
-    (let [sentence (concat (cons "<s>" sentence) '("</s>"))]
+    (let [sentence (concat (cons "<s>" (tokenize sentence)) '("</s>"))]
       (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
         (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1})]
            (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
