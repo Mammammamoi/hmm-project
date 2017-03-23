@@ -1,6 +1,8 @@
 (ns viterbi.algorithm-test
   (:require [clojure.test :refer :all]
-            [viterbi.algorithm :refer :all]))
+            [viterbi.algorithm :refer :all])
+  (:require [viterbi.bigrams :as bi])
+  (:require [viterbi.lexicon :as lex]))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -17,17 +19,25 @@
    (deftest viterbitest
      (testing "Tests zum Viterbi-Algorithmus"
     (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
-    (is (= (viterPos '("X" "wir" "werden" "geschickt" "." "/X") shortEmission shortBigram {} {"SA" 1})
-     (vector {"/X" {"SE" 5.760000000000002E-5} "wir" {"NAM" 0.06}, "geschickt" {"ADJ" 3.6E-4, "PART" 5.760000000000001E-4},
-     "werden" {"MV" 0.0072, "KOPV" 0.009}, "." {"SZ" 5.760000000000002E-5} "X" {"SA" 1}}
-     {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"}
-     )))))
+    (is (= (viterPos "<s>" '("<s>" "wir" "werden" "geschickt" "." "</s>") shortEmission shortBigram {} {"<s>" 1})
+           [{"wir" {"PPER" 0.06}, "geschickt" {"ADJD" 3.6E-4, "VVPP" 5.760000000000001E-4},
+           "</s>" {"</s>" 3.6E-5}, "werden" {"VVFIN" 0.009, "VAINF" 0.0072}, "." {"$." 3.6E-5},
+           "<s>" {"<s>" 1}}
+           {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
+           ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
+           ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
+           ["</s>" "</s>"] ["." "$."]}] ))))
 
     (deftest backtrackerTest
-      (testing "Tests zur Herausgabe der POS-Tags in richtiger Reihenfolge"
-        (is (= (backtracker {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"}
-          "SE") (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))
-        (is (= (bestSeq '("X" "wir" "werden" "geschickt." "/X")
-           shortEmission
-           {"NAM" "SA", "MV" "NAM", "KOPV" "NAM", "ADJ" "KOPV", "PART" "MV", "SZ" "PART", "SE" "SZ"})
-           (vector "SA" "NAM" "MV" "PART" "SZ" "SE")))))
+      (testing "Tests zum backtracking"
+      (is (= (backtracker {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
+              ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
+              ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
+              ["</s>" "</s>"] ["." "$."]} ["geschickt" "ADJD"])
+          (vector "<s>" "PPER" "VVFIN" "ADJD")))
+       (is (= (bestSeq '("<s>" "wir" "werden" "geschickt" "." "</s>") shortEmission
+                 {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
+                  ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
+                  ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
+                  ["</s>" "</s>"] ["." "$."]})
+               (vector "<s>" "PPER" "VVFIN" "ADJD" "$." "</s>")))))

@@ -100,13 +100,13 @@
   (defn filterColumns
     "Filters the nodes in the columns which are not in any sequenz-path"
     [column1 column2 backtrackMap]
-    (let [newColumn2 (into [] (filter (fn [node] (if (some #(= % (node 1)) (keys backtrackMap))
+    (let [newColumn2 (into [] (filter (fn [node] (if (some #(= % (vector (node 0) (node 1))) (keys backtrackMap))
                                              true
                                           false))
                       column2))]
       (let [valNodes (map (fn [keyNode] (get backtrackMap keyNode))
-                             (map (fn [node] (node 1)) newColumn2))]
-      (conj (vector (into [] (filter (fn [node] (if (some #(= % (node 1)) valNodes)
+                             (map (fn [node] (vector (node 0) (node 1))) newColumn2))]
+      (conj (vector (into [] (filter (fn [node] (if (some #(= % (vector (node 0) (node 1))) valNodes)
                                               true
                                              false))
                           column1)))
@@ -158,7 +158,6 @@
     "Creates a node-link-diagram and saves it in a
     text.png document"
     [name sentence filteredDict backtrackMap bestSeq]
-        (println bestSeq)
     (let [bestSeq (apply vector (map (fn [num]
                     (str (get (apply vector sentence) num) "|" (get (apply vector bestSeq) num))) (range (count bestSeq))))]
     ;(println (graph sentence filteredDict backtrackMap bestSeq))))
