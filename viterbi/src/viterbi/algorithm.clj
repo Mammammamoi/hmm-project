@@ -123,7 +123,8 @@
     links of the posttags related to the sentence. The second graph shows the links
     and probabilities after using the viterbi-algorithm."
     [sentence, dict, biGramMap]
-    (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
-    (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1})]
-       (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
-                           (bestSeq sentence (vitVec 0) (vitVec 1)))))
+    (let [sentence (concat (cons "<s>" sentence) '("</s>"))]
+      (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
+        (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1})]
+           (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
+            (bestSeq sentence (vitVec 0) (vitVec 1))))))
