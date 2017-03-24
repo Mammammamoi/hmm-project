@@ -19,25 +19,31 @@
    (deftest viterbitest
      (testing "Tests zum Viterbi-Algorithmus"
     (is (= (get-ins {"a" {"ab" 2 "ac" 3} "b" {"ab" 4 "d" 5}} '("a" "b") "ab") (hash-map "b" 4 "a" 2)))
-    (is (= (viterPos "<s>" '("<s>" "wir" "werden" "geschickt" "." "</s>") shortEmission shortBigram {} {"<s>" 1})
+    (is (= (viterPos '("<s>" "wir" "werden" "geschickt" "." "</s>") shortEmission shortBigram {} {"<s>" 1.0})
            [{"wir" {"PPER" 0.06}, "geschickt" {"ADJD" 3.6E-4, "VVPP" 5.760000000000001E-4},
            "</s>" {"</s>" 3.6E-5}, "werden" {"VVFIN" 0.009, "VAINF" 0.0072}, "." {"$." 3.6E-5},
-           "<s>" {"<s>" 1}}
-           {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
-           ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
-           ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
-           ["</s>" "</s>"] ["." "$."]}] ))))
+           "<s>" {"<s>" 1.0}}
+           {["VVFIN" 0.009] ["PPER" 0.06], ["VAINF" 0.0072] ["PPER" 0.06], ["PPER" 0.06]
+           ["<s>" 1.0], ["ADJD" 3.6E-4] ["VVFIN" 0.009], ["VVPP" 5.760000000000001E-4]
+           ["VAINF" 0.0072], ["$." 3.6E-5] ["ADJD" 3.6E-4], ["</s>" 3.6E-5]
+           ["$." 3.6E-5]}] ))))
 
     (deftest backtrackerTest
       (testing "Tests zum backtracking"
-      (is (= (backtracker {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
-              ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
-              ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
-              ["</s>" "</s>"] ["." "$."]} ["geschickt" "ADJD"])
+      (is (= (backtracker {["VVFIN" 0.009] ["PPER" 0.06], ["VAINF" 0.0072] ["PPER" 0.06], ["PPER" 0.06]
+                 ["<s>" 1.0], ["ADJD" 3.6E-4] ["VVFIN" 0.009], ["VVPP" 5.760000000000001E-4]
+                 ["VAINF" 0.0072], ["$." 3.6E-5] ["ADJD" 3.6E-4], ["</s>" 3.6E-5]
+                 ["$." 3.6E-5]} ["ADJD" 3.6E-4])
           (vector "<s>" "PPER" "VVFIN" "ADJD")))
-       (is (= (bestSeq '("<s>" "wir" "werden" "geschickt" "." "</s>") shortEmission
-                 {["werden" "VVFIN"] ["wir" "PPER"], ["werden" "VAINF"] ["wir" "PPER"],
-                  ["wir" "PPER"] ["<s>" "<s>"], ["geschickt" "ADJD"] ["werden" "VVFIN"],
-                  ["geschickt" "VVPP"] ["werden" "VAINF"], ["." "$."] ["geschickt" "ADJD"],
-                  ["</s>" "</s>"] ["." "$."]})
+       (is (= (bestSeq '("<s>" "wir" "werden" "geschickt" "." "</s>")
+                    {"wir" {"PPER" 0.06},
+                    "geschickt" {"ADJD" 3.6E-4, "VVPP" 5.760000000000001E-4},
+                    "</s>" {"</s>" 3.6E-5},
+                    "werden" {"VVFIN" 0.009, "VAINF" 0.0072},
+                    "." {"$." 3.6E-5}, "<s>" {"<s>" 1.0}}
+                   {["VVFIN" 0.009] ["PPER" 0.06], ["VAINF" 0.0072]
+                    ["PPER" 0.06], ["PPER" 0.06] ["<s>" 1.0], ["ADJD" 3.6E-4]
+                    ["VVFIN" 0.009], ["VVPP" 5.760000000000001E-4]
+                    ["VAINF" 0.0072], ["$." 3.6E-5] ["ADJD" 3.6E-4],
+                    ["</s>" 3.6E-5] ["$." 3.6E-5]})
                (vector "<s>" "PPER" "VVFIN" "ADJD" "$." "</s>")))))

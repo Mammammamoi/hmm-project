@@ -12,8 +12,8 @@
   [x]
   (println x "Hello, Universe!"))
 
-  (def shortEmission (hash-map "<s>" (hash-map "<s>" 1) "wir" (hash-map "PPER" 0.2) "werden" (hash-map "VAINF" 0.3
-  "VVFIN" 0.5) "geschickt" (hash-map "ADJD" 0.2 "VVPP" 0.4) "." (hash-map "$." 1) "</s>" (hash-map "</s>" 1)))
+  (def shortEmission (hash-map "<s>" (hash-map "<s>" 1.0) "wir" (hash-map "PPER" 0.2) "werden" (hash-map "VAINF" 0.3
+  "VVFIN" 0.5) "geschickt" (hash-map "ADJD" 0.2 "VVPP" 0.4) "." (hash-map "$." 1.0) "</s>" (hash-map "</s>" 1.0)))
 
   (def shortBigram
 (hash-map "ADJD" (hash-map "ADJD" 0.2 "VAINF" 0.1 "VVFIN" 0.1 "PPER" 0.4 "VVPP" 0.4 "<s>" 0 "</s>" 0 "$." 0.1)
@@ -22,7 +22,7 @@
    "PPER" (hash-map "ADJD" 0.05 "VAINF" 0.4 "VVFIN" 0.3 "PPER" 0.05 "VVPP" 0.1 "$." 0.1 "<s>" 0.1 "</s>" 0)
    "PART" (hash-map "ADJD" 0.3 "VAINF" 0.1 "VVFIN" 0.1 "PPER" 0.1 "VVPP" 0.3 "$." 0.1 "<s>" 0.1 "</s>" 0)
      "$." (hash-map "ADJD" 0.3 "VAINF" 0.2 "VVFIN" 0.1 "PPER" 0.3 "VVPP" 0.1 "</s>" 1 "$." 0 "<s>" 0)
-     "<s>" (hash-map "PPER" 0.3 "ADJD" 0.3 "VAINF" 0.2 "VVFIN" 0.1 "VVPP" 0.1 "</s>" 0 "$." 0 "<s>" 1)
+     "<s>" (hash-map "PPER" 0.3 "ADJD" 0.3 "VAINF" 0.2 "VVFIN" 0.1 "VVPP" 0.1 "</s>" 0 "$." 0 "<s>" 1.0)
      "</s>" (hash-map "VAINF" 0 "VVFIN" 0 "VVPP" 0 "</s>" 1 "$." 0 "<s>" 0 )))
 
   (def emission (hash-map "er" {"PPRO" 1, "SA" 0.5}, "Andrew" {"NAM" 0.04}, "J." {"NAM" 0.04}, "Viterbi" {"NAM" 0.04}, "Dekodierung" {"NAM" 0.04},
@@ -72,7 +72,7 @@
    (if (empty? keyPOS)
      maximum
    (let [newProb (vector (first keyPOS)
-          (* (* (get biMapVal (first keyPOS)) priVal) (get probSeq (first keyPOS))))]
+         (* (* (get biMapVal (first keyPOS)) priVal) (get probSeq (first keyPOS))))]
       (if (> (get newProb 1) (get maximum  1))
         (maxVal (rest keyPOS) priVal biMapVal newProb probSeq)
       (maxVal (rest keyPOS) priVal biMapVal maximum probSeq)))))
@@ -93,23 +93,23 @@
   (defn viterPos
     "Implementation of the viterbi-algorithm. The argument words should
     be a list of words ordered by their position in the sentence."
-   [word, words, dictionary, biGramMap, backtrackMap, pathProb]
+   [words, dictionary, biGramMap, backtrackMap, pathProb]
    (if (= (first words) "<s>")
-     (viterPos word (rest words) dictionary biGramMap backtrackMap pathProb)
+     (viterPos (rest words) dictionary biGramMap backtrackMap pathProb)
     (if (empty? words)
       (vector dictionary backtrackMap)
     (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
           (get-ins biGramMap (keys pathProb) k) ["a" 0] pathProb))
           (get dictionary (first words)) 1)]
        (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
-            [outPos (get maxVect 1)])) biGramSeq (mapVal (fn [vektor] [word (get vektor 0)])
+            [outPos (get maxVect 1)])) biGramSeq (mapVal (fn [vektor] [(get vektor 0) (get pathProb (get vektor 0))])
             newPathProb 0)]
-          (viterPos (first words), (rest words),
+          (viterPos (rest words),
               (update dictionary (first words) (fn [a] newPathForm)), biGramMap,
               (union backtrackMap
                 (rename-keys biGramSeq
                 (into (hash-map)
-                (map (fn [posttag] [posttag [(first words) posttag]])
+                (map (fn [posttag] [posttag [posttag (get newPathForm posttag)]])
                     (keys newPathProb))))),
                newPathForm))))))
 
@@ -117,16 +117,16 @@
   "Returns a sequence of postags as a hash-map. This hash-maps contains bigrams,
   in wich the keys are the postags. The order of the bigrams is reversed."
    [postags, pos]
-  (if (= pos ["<s>" "<s>"])
-   [(pos 1)]
-  (conj (backtracker postags (get postags pos)) (pos 1))))
+  (if (= pos ["<s>" 1.0])
+   [(pos 0)]
+  (conj (backtracker postags (get postags pos)) (pos 0))))
 
   (defn bestSeq
    "Returns the most probable sequence of postags using the methode backtracker."
    [sentence, dict, postags]
    (backtracker postags
-     (vector (last sentence)
-       (first (apply max-key val (get (filterDict sentence dict {}) (last sentence)))))))
+     (apply max-key val (get (filterDict sentence dict {})
+                                  (last sentence)))))
 
   (defn visualizeViterbi
     "Visualizes the viterbi-algorithm through two graphs. One graph shows the initial
@@ -135,6 +135,7 @@
     [sentence, dict, biGramMap]
     (let [sentence (concat (cons "<s>" (tokenize sentence)) '("</s>"))]
       (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
-        (let [vitVec (viterPos "<s>" sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1})]
+        (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1.0})]
            (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
-            (bestSeq sentence (vitVec 0) (vitVec 1))))))
+            (bestSeq sentence (vitVec 0) (vitVec 1)))
+          (bestSeq sentence (vitVec 0) (vitVec 1)))))

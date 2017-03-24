@@ -100,13 +100,13 @@
   (defn filterColumns
     "Filters the nodes in the columns which are not in any sequenz-path"
     [column1 column2 backtrackMap]
-    (let [newColumn2 (into [] (filter (fn [node] (if (some #(= % (vector (node 0) (node 1))) (keys backtrackMap))
+    (let [newColumn2 (into [] (filter (fn [node] (if (some #(= % (vector (node 1) (node 2))) (keys backtrackMap))
                                              true
                                           false))
                       column2))]
       (let [valNodes (map (fn [keyNode] (get backtrackMap keyNode))
-                             (map (fn [node] (vector (node 0) (node 1))) newColumn2))]
-      (conj (vector (into [] (filter (fn [node] (if (some #(= % (vector (node 0) (node 1))) valNodes)
+                             (map (fn [node] (vector (node 1) (node 2))) newColumn2))]
+      (conj (vector (into [] (filter (fn [node] (if (some #(= % (vector (node 1) (node 2))) valNodes)
                                               true
                                              false))
                           column1)))
