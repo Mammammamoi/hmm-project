@@ -2,6 +2,7 @@
   (:require [viterbi.visualization :as vis])
   (:require [viterbi.bigrams :as bi])
   (:require [viterbi.lexicon :as lex])
+  (:require [viterbi.morph-tags :as morph-tags])
   (:gen-class))
 (use '[clojure.set :only (union rename-keys)])
 (use '[clojure.string :only (split)])
@@ -55,7 +56,14 @@
      filteredDict
    (filterDict (rest sentence) dict
      (into (hash-map) (concat filteredDict
-                       {(first sentence) (get dict (first sentence))})))))
+                        {(first sentence)
+                          (if (contains? dict (first sentence))
+                            (get dict (first sentence))
+                          (let [morphtags (union (first (morph-tags/find-in-praefix (first sentence)))
+                                           (first (morph-tags/find-in-suffix (first sentence))))]
+                            (if (= morphtags nil)
+                               (hash-map "XY" 0.1e-09)
+                             morphtags)))})))))
 
   (defn mapVal
     "Maps the values of a hash-map into a new hash-map
@@ -96,29 +104,30 @@
    [words, dictionary, biGramMap, backtrackMap, pathProb]
    (if (= (first words) "<s>")
      (viterPos (rest words) dictionary biGramMap backtrackMap pathProb)
-    (if (empty? words)
+   (if (empty? words)
       (vector dictionary backtrackMap)
-    (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
-          (get-ins biGramMap (keys pathProb) k) ["a" 0] pathProb))
+   (let [newPathProb (mapVal (fn [k, v]  (maxVal (keys pathProb) v
+                              (get-ins biGramMap (keys pathProb) k) ["a" 0] pathProb))
           (get dictionary (first words)) 1)]
        (let [newPathForm (into (hash-map) (for [[outPos maxVect] newPathProb]
-            [outPos (get maxVect 1)])) biGramSeq (mapVal (fn [vektor] [(get vektor 0) (get pathProb (get vektor 0))])
-            newPathProb 0)]
+                                           [outPos (get maxVect 1)]))
+             biGramSeq (mapVal (fn [vektor] [(get vektor 0) (get pathProb (get vektor 0))])
+                        newPathProb 0)]
           (viterPos (rest words),
               (update dictionary (first words) (fn [a] newPathForm)), biGramMap,
               (union backtrackMap
                 (rename-keys biGramSeq
-                (into (hash-map)
-                (map (fn [posttag] [posttag [posttag (get newPathForm posttag)]])
-                    (keys newPathProb))))),
-               newPathForm))))))
+                 (into (hash-map)
+                  (map (fn [posttag] [posttag [posttag (get newPathForm posttag)]])
+                  (keys newPathProb))))),
+            newPathForm))))))
 
   (defn backtracker
   "Returns a sequence of postags as a hash-map. This hash-maps contains bigrams,
   in wich the keys are the postags. The order of the bigrams is reversed."
    [postags, pos]
   (if (= pos ["<s>" 1.0])
-   [(pos 0)]
+    [(pos 0)]
   (conj (backtracker postags (get postags pos)) (pos 0))))
 
   (defn bestSeq
@@ -126,7 +135,7 @@
    [sentence, dict, postags]
    (backtracker postags
      (apply max-key val (get (filterDict sentence dict {})
-                                  (last sentence)))))
+                          (last sentence)))))
 
   (defn visualizeViterbi
     "Visualizes the viterbi-algorithm through two graphs. One graph shows the initial
@@ -137,5 +146,5 @@
       (vis/createVitGraph "InitGraph" sentence (filterDict sentence dict {}) {} '())
         (let [vitVec (viterPos sentence (filterDict sentence dict {}) biGramMap {} {"<s>" 1.0})]
            (vis/createVitGraph "Best Sequence Graph" sentence (vitVec 0) (vitVec 1)
-            (bestSeq sentence (vitVec 0) (vitVec 1)))
-          (bestSeq sentence (vitVec 0) (vitVec 1)))))
+             (bestSeq sentence (vitVec 0) (vitVec 1)))
+           (bestSeq sentence (vitVec 0) (vitVec 1)))))
